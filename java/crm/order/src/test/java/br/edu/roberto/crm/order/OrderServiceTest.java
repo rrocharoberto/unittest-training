@@ -3,6 +3,7 @@ package br.edu.roberto.crm.order;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -12,6 +13,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+import br.edu.roberto.crm.support.EntityNotFoundException;
+import br.edu.roberto.crm.support.InvalidDataException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,13 +33,11 @@ import br.edu.roberto.crm.payment.enums.PaymentStatus;
 
 class OrderServiceTest {
 
-	static OrderService service;
+	static OrderService service; //unit to be tested
 	static OrderMongoRepository repoMock;
 	static OrderPaymentClient paymentClientMock;
 
 	OrderEntity order1 = new OrderEntity(1, 10f, new Date(), 1);
-	OrderEntity order2 = new OrderEntity(2, 20f, new Date(), 2);
-	OrderEntity order3 = new OrderEntity(3, 30f, new Date(), 3);
 	OrderEntity order4 = new OrderEntity(4, 40f, new Date(), 4);
 	OrderEntity order5 = new OrderEntity(5, 50f, new Date(), 5);
 
@@ -78,15 +79,8 @@ class OrderServiceTest {
 		// Arrange
 		Mockito.when(repoMock.findByNumber(2)).thenReturn(Optional.empty());
 
-		try {
-			// Act
-			OrderDTO order = service.findByNumber(2);
-
-			// Assert
-			fail("It should've raised the exception");
-		} catch (Exception e) {
-			// the exception is expected
-		}
+		// Act & Assert
+		assertThrows(EntityNotFoundException.class, () -> service.findByNumber(2));
 	}
 
 	@Test
@@ -112,15 +106,8 @@ class OrderServiceTest {
 		Mockito.when(paymentClientMock.getPaymentDetail(4)).thenReturn(paidDTO);
 		Mockito.when(repoMock.findByNumber(4)).thenReturn(Optional.of(order4));
 
-		try {
-			// Act
-			service.payOrder(orderPay4);
-
-			// Assert
-			fail("It should've raised the exception");
-		} catch (Exception e) {
-			// the exception is expected
-		}
+		// Act & Assert
+		assertThrows(InvalidDataException.class, () -> service.payOrder(orderPay4));
 
 		// Assert: method getPaymentDetail(...) should be called once
 		Mockito.verify(paymentClientMock, times(1)).getPaymentDetail(anyInt());
@@ -133,15 +120,8 @@ class OrderServiceTest {
 //		Mockito.when(paymentClientMock.getPaymentDetail(5)).thenReturn(canceledDTO);
 //		Mockito.when(repoMock.findByNumber(5)).thenReturn(Optional.of(order5));
 //
-//		try {
-//			// Act
-//			service.payOrder(orderPay5);
-//
-//			// Assert
-//			fail("It should've raised the exception");
-//		} catch (Exception e) {
-//			// the exception is expected
-//		}
+//		// Act & Assert
+//		assertThrows(InvalidDataException.class, () -> service.payOrder(orderPay5));
 //
 //		// Assert: method getPaymentDetail(...) should be called once
 //		Mockito.verify(paymentClientMock, times(1)).getPaymentDetail(anyInt());
@@ -151,7 +131,7 @@ class OrderServiceTest {
 	void testGetAllOrders_WithSuccess() {
 
 		// Arrange
-		List<OrderEntity> orders = List.of(order1, order2);
+		List<OrderEntity> orders = List.of(order1, order4);
 		Mockito.when(repoMock.findAll()).thenReturn(orders);
 
 		// Act

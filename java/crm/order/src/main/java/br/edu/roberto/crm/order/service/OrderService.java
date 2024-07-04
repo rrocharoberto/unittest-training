@@ -24,24 +24,12 @@ import br.edu.roberto.crm.support.InvalidDataException;
 public class OrderService {
 
 	private OrderMongoRepository repo;
-
 	private OrderPaymentClient orderPaymentClient;
 
 	@Autowired
 	public OrderService(OrderMongoRepository repo, OrderPaymentClient orderPayClient) {
 		this.repo = repo;
 		this.orderPaymentClient = orderPayClient;
-	}
-
-	public void createOrder(OrderNewDTO dto) {
-		OrderEntity orderEntity = OrderEntityConverter.toEntity(dto);
-
-		NewPaymentDTO paymentDTO = new NewPaymentDTO(dto.getNumber(), dto.getValue(), new Date());
-		PaymentResponseDTO payment = orderPaymentClient.createPayment(paymentDTO);
-
-		orderEntity.setPaymentId(payment.getId());
-
-		repo.save(orderEntity);
 	}
 
 	public void payOrder(OrderPayDTO dto) {
@@ -54,6 +42,17 @@ public class OrderService {
 
 		ConfirmPaymentDTO confirmPayDTO = new ConfirmPaymentDTO(dto.getNumber(), dto.getMethod(), new Date());
 		orderPaymentClient.confirmPayment(confirmPayDTO);
+	}
+
+	public void createOrder(OrderNewDTO dto) {
+		OrderEntity orderEntity = OrderEntityConverter.toEntity(dto);
+
+		NewPaymentDTO paymentDTO = new NewPaymentDTO(dto.getNumber(), dto.getValue(), new Date());
+		PaymentResponseDTO payment = orderPaymentClient.createPayment(paymentDTO);
+
+		orderEntity.setPaymentId(payment.getId());
+
+		repo.save(orderEntity);
 	}
 
 	public OrderDTO findByNumber(Integer number) {
